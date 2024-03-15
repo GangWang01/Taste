@@ -1,0 +1,86 @@
+id: 
+name: GitOps.PullRequestIssueManagement
+description: GitOps.PullRequestIssueManagement primitive
+owner: 
+resource: repository
+disabled: false
+where: 
+configuration:
+  resourceManagementConfiguration:
+    eventResponderTasks:
+    - if:
+      - payloadType: Issue_Comment
+      - isOpen
+      - hasLabel:
+          label: stale
+      - hasLabel:
+          label: triaged
+      - not:
+          hasLabel:
+            label: bot-exclude
+      then:
+      - removeLabel:
+          label: stale
+      - removeLabel:
+          label: triaged
+      description: Unstale Open Issues that get comments
+    - if:
+      - payloadType: Issue_Comment
+      - not: isOpen
+      - hasLabel:
+          label: stale
+      - hasLabel:
+          label: triaged
+      - not:
+          hasLabel:
+            label: bot-exclude
+      then:
+      - removeLabel:
+          label: triaged
+      description: Remove label triaged from closed stale issues that get comments
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: needs-more-info
+      - not:
+          hasLabel:
+            label: triaged
+      then:
+      - addLabel:
+          label: triaged
+      description: Add label triaged to issue when needs-more-info is applied
+    - if:
+      - payloadType: Issue_Comment
+      - isActivitySender:
+          issueAuthor: True
+      - hasLabel:
+          label: needs-more-info
+      - hasLabel:
+          label: triaged
+      then:
+      - removeLabel:
+          label: triaged
+      - addLabel:
+          label: author-responded
+      - removeLabel:
+          label: needs-more-info
+      description: author responds to `needs-more-info` gets `author-responded`
+    - if:
+      - payloadType: Pull_Request
+      - or:
+        - isAction:
+            action: Opened
+        - isAction:
+            action: Reopened
+        - labelAdded:
+            label: Servicing-consider
+      - or:
+        - targetsBranch:
+            branch: rel/1.0
+      then:
+      - addReply:
+          reply: >-
+            Hello @${issueAuthor}, you are changing release branch.
+      description: Comment on rel/* branches
+onFailure: 
+onSuccess: 
