@@ -1,0 +1,8 @@
+<Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003' ToolsVersion='Current'>
+ <Target Name='target1'>
+    <Message Text='text'/>
+ </Target>
+ <Target Name='target2'>
+    <Message Text='text'/>
+ </Target>
+</Project>
